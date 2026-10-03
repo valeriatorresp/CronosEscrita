@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isEmailVerified() {
+      // Strictly mandate verified emails for extra layer of security.
+      // Firebase Google login auth flows automatically satisfy this requirement.
+      return isSignedIn() && (request.auth.token.email_verified == true || request.auth.token.firebase.sign_in_provider == 'google.com');
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Entity validator for UserBackup (The "Anti-Update-Gap")
+    function isValidUserBackup(data) {
+      return data.keys().hasAll(['userId', 'goal', 'dailyGoal', 'challengeDays', 'startDate', 'updatedAt'])
+        && data.keys().hasOnly(['userId', 'goal', 'dailyGoal', 'challengeDays', 'startDate', 'updatedAt', 'booksCount', 'sessionsCount', 'rawBooksJson', 'rawSessionsJson', 'rawProjectsJson', 'rawBadgesJson'])
+        && data.userId is string && data.userId.size() <= 128
+        && data.goal is int && data.goal > 0 && data.goal <= 10000000
+        && data.dailyGoal is int && data.dailyGoal >= 100 && data.dailyGoal <= 100000
+        && data.challengeDays is int && data.challengeDays > 0 && data.challengeDays <= 365
+        && data.startDate is string && data.startDate.size() <= 20
+        && data.updatedAt is string && data.updatedAt.size() <= 50;
+    }
+
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /backups/{backupId} {
+        allow read: if isOwner(userId) && isValidId(backupId);
+        allow create: if isOwner(userId) 
+                      && isValidId(backupId) 
+                      && isEmailVerified()
+                      && isValidUserBackup(incoming())
+                      && incoming().userId == userId;
+        allow update: if isOwner(userId)
+                      && isValidId(backupId)
+                      && isEmailVerified()
+                      && isValidUserBackup(incoming())
+                      && incoming().userId == userId
+                      && incoming().userId == existing().userId;
+        allow delete: if isOwner(userId) && isValidId(backupId);
+      }
+    }
+  }
+}

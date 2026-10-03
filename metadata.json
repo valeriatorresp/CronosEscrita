@@ -1,0 +1,6 @@
+{
+  "name": "CronosEscrita - Metas de Escrita",
+  "description": "Acompanhamento moderno de metas e rotina de escrita para livros, artigos, ensaios e projetos autorais.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

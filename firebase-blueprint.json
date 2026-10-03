@@ -1,0 +1,66 @@
+{
+  "entities": {
+    "UserBackup": {
+      "title": "User Workspace Backup",
+      "description": "Consolidated cloud backup of user books, sessions, projects, and achievements to guarantee persistence across devices.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The unique ID of the user."
+        },
+        "goal": {
+          "type": "number",
+          "description": "The current overall word goal."
+        },
+        "dailyGoal": {
+          "type": "number",
+          "description": "The daily writing word goal."
+        },
+        "challengeDays": {
+          "type": "number",
+          "description": "The number of days in the current challenge."
+        },
+        "startDate": {
+          "type": "string",
+          "description": "The starting date of the current challenge."
+        },
+        "booksCount": {
+          "type": "number",
+          "description": "The number of books currently in the workspace."
+        },
+        "sessionsCount": {
+          "type": "number",
+          "description": "The number of writing sessions recorded."
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of when this backup was uploaded."
+        },
+        "rawBooksJson": {
+          "type": "string",
+          "description": "Consolidated JSON string of books to prevent Firestore document size limit issues."
+        },
+        "rawSessionsJson": {
+          "type": "string",
+          "description": "Consolidated JSON string of writing sessions to prevent Firestore document size limit issues."
+        },
+        "rawProjectsJson": {
+          "type": "string",
+          "description": "Consolidated JSON string of projects in the workspace."
+        },
+        "rawBadgesJson": {
+          "type": "string",
+          "description": "Consolidated JSON string of unlocked and locked badges."
+        }
+      },
+      "required": ["userId", "goal", "dailyGoal", "challengeDays", "startDate", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/backups/current": {
+      "schema": "UserBackup",
+      "description": "Consolidated backup document for a single user's workspace."
+    }
+  }
+}
